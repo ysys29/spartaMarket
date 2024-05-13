@@ -1,0 +1,17 @@
+{
+  "name": "task-market",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write *.js **/*.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.3.4"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
+  }
+}
