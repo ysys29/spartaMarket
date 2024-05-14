@@ -28,96 +28,121 @@ router.post('/products', async (req, res, next) => {
       updatedAt,
     });
 
-    return res.status(201).json({ goods: createdProducts });
+    const { password: _, ...resProducts } = createdProducts.toObject();
+
+    return res
+      .status(201)
+      .json({ message: '상품 생성에 성공했습니다.', goods: resProducts });
   } catch (error) {
-    return res.status(400).json({ message: '이미 등록된 상품입니다.' });
+    return res.status(400).json({ errorMessage: '이미 등록된 상품입니다.' });
   }
 });
 
 //상품 목록 조회 api
 router.get('/products', async (req, res, next) => {
-  const productsItem = await Products.find().sort('-createdAt').exec();
+  const productsItem = await Products.find()
+    .sort('-createdAt')
+    .select('-password')
+    .exec();
 
-  return res.status(200).json({ productsItem });
+  return res
+    .status(200)
+    .json({ message: '상품 목록 조회에 성공했습니다.', productsItem });
 });
 
 //상품 목록 상세 조회 api
 router.get('/products/:productsId', async (req, res, next) => {
   const { productsId } = req.params;
-  const findProducts = await Products.findById(productsId).exec();
-  if (!findProducts) {
-    return res.status(404).json({ message: '상품이 존재하지 않습니다.' });
+  if (productsId.length !== 24) {
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
   }
-  return res.status(200).json({ products: findProducts });
+  const findProducts = await Products.findById(productsId)
+    .select('-password')
+    .exec();
+  if (!findProducts) {
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
+  }
+  return res.status(200).json({
+    message: '상품 상세 조회에 성공했습니다.',
+    products: findProducts,
+  });
 });
 
 //상품 삭제 api
 router.delete('/products/:productsId', async (req, res, next) => {
   const { productsId } = req.params;
   const { password } = req.body;
+  if (productsId.length !== 24) {
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
+  }
   const findProducts = await Products.findById(productsId).exec();
 
   if (!findProducts) {
-    return res.status(404).json({ message: '상품이 존재하지 않습니다.' });
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
   }
 
   if (!password) {
-    return res.status(400).json({ message: '비밀번호를 입력해 주세요.' });
+    return res.status(400).json({ errorMessage: '비밀번호를 입력해 주세요.' });
   }
   if (password !== findProducts.password) {
-    return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
+    return res
+      .status(401)
+      .json({ errorMessage: '비밀번호가 일치하지 않습니다.' });
   }
-  const pasteProucts = findProducts;
+
   await Products.deleteOne({ _id: productsId });
   return res.status(200).json({
     message: '상품 삭제에 성공했습니다',
-    products: pasteProucts,
+    id: productsId,
   });
 });
 
 //상품 수정 api
 router.put('/products/:productsId', async (req, res, next) => {
-  try {
-    const { productsId } = req.params;
-    const { name, description, manager, status, password } = req.body;
-    const targetProduts = await Products.findById(productsId).exec();
-
-    if (!targetProduts) {
-      return res.status(404).json({ message: '상품이 존재하지 않습니다.' });
-    }
-
-    if (!name || !description || !manager || !status || !password) {
-      return res
-        .status(400)
-        .json({ errorMessage: '상품 정보를 모두 입력해 주세요' });
-    }
-
-    if (password !== targetProduts.password) {
-      return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-    }
-
-    if (status !== 'FOR_SALE' && status !== 'SOLD_OUT') {
-      return res.status(400).json({
-        message: '판매 상태는 FOR_SALE과 SOLD_OUT만 입력 가능합니다.',
-      });
-    }
-
-    targetProduts.name = name;
-    targetProduts.description = description;
-    targetProduts.manager = manager;
-    targetProduts.status = status;
-    targetProduts.password = password;
-    targetProduts.updatedAt = new Date();
-
-    await targetProduts.save();
-
-    return res.status(200).json({
-      message: '상품 수정에 성공했습니다.',
-      products: targetProduts,
-    });
-  } catch (error) {
-    return res.status(400).json({ message: '이미 등록된 상품입니다.' });
+  const { productsId } = req.params;
+  const { name, description, manager, status, password } = req.body;
+  if (productsId.length !== 24) {
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
   }
+  const targetProduts = await Products.findById(productsId).exec();
+
+  if (!targetProduts) {
+    return res.status(404).json({ errorMessage: '상품이 존재하지 않습니다.' });
+  }
+
+  if (!name || !description || !manager || !status || !password) {
+    return res
+      .status(400)
+      .json({ errorMessage: '상품 정보를 모두 입력해 주세요' });
+  }
+
+  if (password !== targetProduts.password) {
+    return res
+      .status(401)
+      .json({ errorMessage: '비밀번호가 일치하지 않습니다.' });
+  }
+
+  if (status !== 'FOR_SALE' && status !== 'SOLD_OUT') {
+    return res.status(400).json({
+      errorMessage: '판매 상태는 FOR_SALE과 SOLD_OUT만 입력 가능합니다.',
+    });
+  }
+
+  targetProduts.name = name;
+  targetProduts.description = description;
+  targetProduts.manager = manager;
+  targetProduts.status = status;
+  targetProduts.password = password;
+  targetProduts.updatedAt = new Date();
+
+  await targetProduts.save();
+
+  const { password: _, ...resProducts } = targetProduts.toObject();
+
+  return res.status(200).json({
+    message: '상품 수정에 성공했습니다.',
+    products: resProducts,
+  });
 });
 
 export default router;
