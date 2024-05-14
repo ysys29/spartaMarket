@@ -1,6 +1,7 @@
 import express from 'express';
 import connect from './schemas/index.js';
 import productsRouter from './routes/products.router.js';
+import errorHandlerMiddleware from './middlewarmies/error-handler.middleware.js';
 
 const app = express();
 const PORT = 3000;
@@ -14,10 +15,12 @@ app.use(express.urlencoded({ extended: true }));
 const router = express.Router();
 
 app.get('/', (req, res) => {
-  return res.json({ message: '안녕!' });
+  return res.json({ message: 'hello spaMarket!' });
 });
 
-app.use('/api', productsRouter);
+app.use('/', productsRouter);
+
+app.use(errorHandlerMiddleware);
 
 app.listen(PORT, () => {
   console.log(PORT, '포트로 서버가 열렸어요!');
