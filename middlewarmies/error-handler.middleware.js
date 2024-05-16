@@ -1,6 +1,22 @@
 export default (error, req, res, next) => {
   if (error.isJoi) {
-    return res.status(400).json({ errorMessage: error.message });
+    const errorMessage = error.details.map((detail) => {
+      switch (detail.context.key) {
+        case 'name':
+          return '상품명을 입력해주세요.';
+        case 'description':
+          return '상품 설명을 입력해주세요.';
+        case 'manager':
+          return '담당자를 입력해주세요.';
+        case 'password':
+          return '비밀번호를 입력해주세요.';
+        case 'productsId':
+          return '상품이 존재하지 않습니다.';
+        default:
+          return detail.message;
+      }
+    });
+    return res.status(400).json({ errorMessage: errorMessage });
   }
   if (error.code === 11000) {
     return res.status(400).json({ errorMessage: '이미 등록 된 상품입니다.' });

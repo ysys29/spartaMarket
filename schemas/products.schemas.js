@@ -32,4 +32,6 @@ const productsSchemas = new mongoose.Schema({
   },
 });
 
+productsSchemas.set('toJSON', { versionKey: false });
+
 export default mongoose.model('Products', productsSchemas);
