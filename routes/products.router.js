@@ -8,8 +8,7 @@ const router = express.Router();
 router.post('/products', async (req, res, next) => {
   try {
     // 리퀘스트해서 받은 상품 정보 받아오기
-    const { name, description, manager, password } = req.body;
-    const status = 'FOR_SALE';
+    const { name, description, manager, password, status } = req.body;
     const createdAt = new Date();
     const updatedAt = new Date();
 
@@ -18,6 +17,7 @@ router.post('/products', async (req, res, next) => {
       description,
       manager,
       password,
+      status,
     });
 
     const createdProducts = await Products.create({
@@ -30,7 +30,7 @@ router.post('/products', async (req, res, next) => {
       updatedAt,
     });
 
-    const { password: _, ...resProducts } = createdProducts.toObject();
+    const { password: _, __v: a, ...resProducts } = createdProducts.toObject();
 
     return res
       .status(201)
@@ -79,7 +79,7 @@ router.delete('/products/:productsId', async (req, res, next) => {
   try {
     const { productsId } = req.params;
     const { password } = req.body;
-    await joiSchema.deleteSchema.validateAsync({ productsId, password });
+    await joiSchema.findSchema.validateAsync({ productsId });
     const findProducts = await Products.findById(productsId).exec();
 
     if (!findProducts) {
@@ -87,6 +87,8 @@ router.delete('/products/:productsId', async (req, res, next) => {
         .status(404)
         .json({ errorMessage: '상품이 존재하지 않습니다.' });
     }
+
+    await joiSchema.deleteSchema.validateAsync({ password });
 
     if (password !== findProducts.password) {
       return res
@@ -110,14 +112,7 @@ router.put('/products/:productsId', async (req, res, next) => {
     const { productsId } = req.params;
     const { name, description, manager, status, password } = req.body;
 
-    await joiSchema.patchSchema.validateAsync({
-      name,
-      description,
-      manager,
-      status,
-      password,
-      productsId,
-    });
+    await joiSchema.findSchema.validateAsync({ productsId });
 
     const targetProduts = await Products.findById(productsId).exec();
 
@@ -126,6 +121,14 @@ router.put('/products/:productsId', async (req, res, next) => {
         .status(404)
         .json({ errorMessage: '상품이 존재하지 않습니다.' });
     }
+
+    await joiSchema.patchSchema.validateAsync({
+      name,
+      description,
+      manager,
+      status,
+      password,
+    });
 
     if (password !== targetProduts.password) {
       return res
@@ -142,7 +145,7 @@ router.put('/products/:productsId', async (req, res, next) => {
 
     await targetProduts.save();
 
-    const { password: _, ...resProducts } = targetProduts.toObject();
+    const { password: _, __v: a, ...resProducts } = targetProduts.toObject();
 
     return res.status(200).json({
       message: '상품 수정에 성공했습니다.',

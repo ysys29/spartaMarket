@@ -11,7 +11,7 @@ export default (error, req, res, next) => {
         case 'password':
           return '비밀번호를 입력해주세요.';
         case 'productsId':
-          return '상품이 존재하지 않습니다.';
+          return '올바르지 않은 상품 id입니다.';
         default:
           return detail.message;
       }

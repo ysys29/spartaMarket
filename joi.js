@@ -6,7 +6,7 @@ const createSchema = joi.object({
   description: joi.string().required(),
   manager: joi.string().required(),
   password: joi.string().required(),
-  status: joi.string().valid('FOR_SALE', 'SOLD_OUT').default('FOR_SALE'),
+  status: joi.string().valid('FOR_SALE', 'SOLD_OUT'),
 });
 
 //수정 스키마
@@ -16,7 +16,6 @@ const patchSchema = joi.object({
   manager: joi.string().required(),
   password: joi.string().required(),
   status: joi.string().valid('FOR_SALE', 'SOLD_OUT').required(),
-  productsId: joi.string().length(24),
 });
 
 //조회 스키마
@@ -27,7 +26,6 @@ const findSchema = joi.object({
 //삭제 스키마
 const deleteSchema = joi.object({
   password: joi.string().required(),
-  productsId: joi.string().length(24),
 });
 
 const joiSchema = {
